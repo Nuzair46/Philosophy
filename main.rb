@@ -1,4 +1,4 @@
-# frozen_string_literal: true
+
 
 require 'wikipedia'
 require 'optparse'
@@ -19,7 +19,7 @@ class Philosophy
       @count += 1
       @page = Wikipedia.find(@current_page_name)
       if @page.summary.nil?
-        puts "Summary not found for @page: #{@current_page_name}. Exiting..."
+        puts "Summary not found for page: #{@current_page_name}. Exiting..."
         exit
       end
       @current_page_name = fetch_wikipedia_raw_content
@@ -51,7 +51,7 @@ class Philosophy
     selected_match = nil
     @filtered_matches.each do |match|
       if @matched_pages.include?(match)
-        puts "Infinite loop detected. Skipping @page: #{match}"
+        puts "Infinite loop detected. Skipping page: #{match}"
         next
       end
 
@@ -68,15 +68,32 @@ class Philosophy
 
   def make_wikipedia_request
     summary = @page.content.split(/==[^=]/).first
-    summary = summary.gsub!(/\{\{[^}]*\}\}/, '')
+    new_summary = summary.dup
+    summary = remove_nested_structures(new_summary)
     summary = summary.gsub(/\n\n/, '').strip
     summary = summary.gsub('<ref>', '')
     summary = summary.gsub('</ref>', '')
     summary = summary.chomp('}}') if summary.end_with?('}}')
     summary = summary.gsub('>}}', '')
     summary = summary.gsub("'''", '')
+    summary.gsub!(/\[\[File:.*?px\]\]/, '')
     summary = summary.lines.reject { |line| line.strip.start_with?('|', "''", '<small>', '*') }.join
     summary.strip.gsub('}}', '')
+  end
+
+  def remove_nested_structures(input)
+    depth = 0
+    result = ''
+    input.each_char do |char|
+      if char == '{'
+        depth += 1
+      elsif char == '}'
+        depth -= 1
+      else
+        result << char if depth == 0
+      end
+    end
+    result
   end
 end
 
