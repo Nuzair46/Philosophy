@@ -17,6 +17,11 @@ class Philosophy
       @count
     else
       @count += 1
+      @page = Wikipedia.find(@current_page_name)
+      if @page.summary.nil?
+        puts "Summary not found for @page: #{@current_page_name}. Exiting..."
+        exit
+      end
       @current_page_name = fetch_wikipedia_raw_content
       count_jumps_to_philosophy
     end
@@ -37,7 +42,7 @@ class Philosophy
   def format_raw_data(raw_content)
     matches = raw_content.strip.scan(/\[\[([^\[\]]*?)\]\]/).flatten
     @filtered_matches = matches.reject do |match|
-      match.start_with?('File:', 'Category:', 'Help:', 'Wikipedia:', 'Template:', 'Portal:', 'Special:', 'Image:', '#', '/', 'User:', 'wikt:', 'List of', 'WP:')
+      match.start_with?('File:', 'Category:', 'Help:', 'Wikipedia:', 'Template:', 'Portal:', 'Special:', 'Image:', '#', '/', 'User:', 'wikt:', 'List of', 'WP:', 'mos:')
     end
     avoid_infinite_loops
   end
@@ -46,7 +51,7 @@ class Philosophy
     selected_match = nil
     @filtered_matches.each do |match|
       if @matched_pages.include?(match)
-        puts "Infinite loop detected. Skipping page: #{match}"
+        puts "Infinite loop detected. Skipping @page: #{match}"
         next
       end
 
@@ -54,23 +59,28 @@ class Philosophy
       selected_match = match
       break
     end
+    if selected_match.nil?
+      puts 'No valid match found. Exiting...'
+      exit
+    end
     selected_match&.split('|')&.first
   end
 
   def make_wikipedia_request
-    page = Wikipedia.find(@current_page_name)
-    summary = page.content.split(/==[^=]/).first
+    summary = @page.content.split(/==[^=]/).first
     summary = summary.gsub!(/\{\{[^}]*\}\}/, '')
     summary = summary.gsub(/\n\n/, '').strip
     summary = summary.gsub('<ref>', '')
     summary = summary.gsub('</ref>', '')
     summary = summary.chomp('}}') if summary.end_with?('}}')
     summary = summary.gsub('>}}', '')
-    summary.strip.split('}}').last
+    summary = summary.gsub("'''", '')
+    summary = summary.lines.reject { |line| line.strip.start_with?('|', "''", '<small>', '*') }.join
+    summary.strip.gsub('}}', '')
   end
 end
 
-options = {}
+options = {end_page: 'Philosophy'}
 OptionParser.new do |opts|
   opts.banner = 'Usage: main.rb [options]'
 
@@ -78,7 +88,7 @@ OptionParser.new do |opts|
     options[:page_name] = name
   end
   opts.on('-eNAME', '--end_page=NAME', 'Page name to end on (Philosophy by default)') do |name|
-    options[:end_page] = name || 'Philosophy'
+    options[:end_page] = name
   end
 end.parse!
 
