@@ -7,3 +7,6 @@ Style/Documentation:
 
 Metrics/AbcSize:
   Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false

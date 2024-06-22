@@ -40,25 +40,30 @@ class Philosophy
   end
 
   def format_raw_data(raw_content)
+    @all_filtered_matches ||= []
     matches = raw_content.strip.scan(/\[\[([^\[\]]*?)\]\]/).flatten
-    @filtered_matches = matches.reject do |match|
+    filtered_matches = matches.reject do |match|
       match.start_with?('File:', 'Category:', 'Help:', 'Wikipedia:', 'Template:', 'Portal:', 'Special:', 'Image:', '#', '/', 'User:', 'wikt:', 'List of', 'WP:', 'mos:')
     end
+    @all_filtered_matches << filtered_matches unless filtered_matches.empty?
     avoid_infinite_loops
   end
 
   def avoid_infinite_loops
     selected_match = nil
-    @filtered_matches.each do |match|
-      if @matched_pages.include?(match)
-        puts "Infinite loop detected. Skipping page: #{match}"
-        next
+    @all_filtered_matches.reverse_each do |filtered_matches|
+      filtered_matches.each do |match|
+        if @matched_pages.include?(match)
+          puts "Infinite loop detected. Skipping page: #{match}"
+          next
+        end
+        @matched_pages << match
+        selected_match = match
+        break
       end
-
-      @matched_pages << match
-      selected_match = match
-      break
+      break if selected_match
     end
+
     if selected_match.nil?
       puts 'No valid match found. Exiting...'
       exit
