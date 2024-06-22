@@ -37,7 +37,7 @@ class Philosophy
   def format_raw_data(raw_content)
     matches = raw_content.strip.scan(/\[\[([^\[\]]*?)\]\]/).flatten
     @filtered_matches = matches.reject do |match|
-      match.start_with?('File:', 'Category:', 'Help:', 'Wikipedia:', 'Template:', 'Portal:', 'Special:', 'Image:', '#', '/', 'User:', 'wikt:')
+      match.start_with?('File:', 'Category:', 'Help:', 'Wikipedia:', 'Template:', 'Portal:', 'Special:', 'Image:', '#', '/', 'User:', 'wikt:', 'List of', 'WP:')
     end
     avoid_infinite_loops
   end
@@ -62,6 +62,8 @@ class Philosophy
     summary = page.content.split(/==[^=]/).first
     summary = summary.gsub!(/\{\{[^}]*\}\}/, '')
     summary = summary.gsub(/\n\n/, '').strip
+    summary = summary.gsub('<ref>', '')
+    summary = summary.gsub('</ref>', '')
     summary = summary.chomp('}}') if summary.end_with?('}}')
     summary = summary.gsub('>}}', '')
     summary.strip.split('}}').last
