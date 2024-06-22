@@ -14,12 +14,12 @@ class Philosophy
   def count_jumps_to_philosophy
     puts "Jumping to: #{@current_page_name}"
     if @current_page_name.downcase == @end_page
-      @count
+      puts "Reached the end page: #{@end_page}. Total jumps: #{@count}"
     else
       @count += 1
       @page = Wikipedia.find(@current_page_name)
       if @page.summary.nil?
-        puts "Summary not found for page: #{@current_page_name}. Exiting..."
+        puts "Summary not found for page: #{@current_page_name}. Current count: #{@count}. Exiting..."
         exit
       end
       @current_page_name = fetch_wikipedia_raw_content
@@ -68,7 +68,7 @@ class Philosophy
     end
 
     if selected_match.nil?
-      puts 'No valid match found. Exiting...'
+      puts "No valid match found. Current count: #{@count}. Exiting..."
       exit
     end
     selected_match&.split('|')&.first
@@ -119,7 +119,7 @@ end.parse!
 
 if options[:page_name]
   puts "Counting jumps to #{options[:end_page]}..."
-  puts Philosophy.new(page_name: options[:page_name], end_page: options[:end_page]).count_jumps_to_philosophy
+  Philosophy.new(page_name: options[:page_name], end_page: options[:end_page]).count_jumps_to_philosophy
 else
   puts 'Please arguments, run with -h for help.'
 end
