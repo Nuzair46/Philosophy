@@ -43,10 +43,7 @@ class Philosophy
     @all_filtered_matches ||= []
     matches = raw_content.strip.scan(/\[\[([^\[\]]*?)\]\]/).flatten
     filtered_matches = matches.reject do |match|
-      match.start_with?(
-        'File:', 'Category:', 'Help:', 'Wikipedia:', 'Template:', 'Portal:', 'Special:',
-        'Image:', '#', '/', 'User:', 'wikt:', 'List of', 'WP:', 'mos:', 'talk:'
-      )
+      match.downcase.start_with?('#', '/', 'list of') || match.include?(':')
     end
     @all_filtered_matches << filtered_matches unless filtered_matches.empty?
     avoid_infinite_loops
